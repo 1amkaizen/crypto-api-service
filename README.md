@@ -56,7 +56,7 @@ Server akan berjalan di `http://127.0.0.1:8000`.
 
 ## 📌 Endpoint
 
-Semua endpoint berada di prefix `/api/v1/crypto`. Contoh:
+Semua endpoint berada di prefix `/api/v1/crypto`. Contoh:name
 
 | Endpoint                         | Method | Deskripsi                        |
 |----------------------------------|--------|----------------------------------|
@@ -81,7 +81,7 @@ Kalau mau, gue bisa sekalian bikin **contoh request/response JSON** untuk tiap e
 
 ```
 .
-├─ main.py
+├─ main.pyname
 ├─ routers/
 │  └─ crypto/
 │     ├─ ping.py
@@ -114,5 +114,5 @@ Kalau mau, gue bisa sekalian bikin **contoh request/response JSON** untuk tiap e
 
 ## 📄 Lisensi
 
-MIT License
+[MIT License](https://github.com/1amkaizen/crypto-api-service/blob/main/LICENSE)
 
