@@ -46,6 +46,12 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
+atau
+
+```bash
+gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+```
+
 Server akan berjalan di `http://127.0.0.1:8000`.
 
 ## 📌 Endpoint
