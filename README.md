@@ -114,5 +114,5 @@ Kalau mau, gue bisa sekalian bikin **contoh request/response JSON** untuk tiap e
 
 ## 📄 Lisensi
 
-[MIT License](https://github.com/1amkaizen/crypto-api-service/blob/main/LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/1amkaizen/crypto-api-service/blob/main/LICENSE)
 
