@@ -1,0 +1,184 @@
+# 📍 lib/monitor/usdc/base_usdc.py
+import os
+import asyncio
+import logging
+from datetime import datetime, timezone
+from web3 import Web3
+from web3._utils.events import get_event_data
+from lib.supabase_client import supabase
+from lib.midtrans_disburse import disburse
+from notifications.jual import JualNotifier
+from lib.coingecko import get_current_price
+
+# ================== LOGGING ==================
+logger = logging.getLogger("monitor.base_usdc")
+logger.setLevel(logging.INFO)
+ch = logging.StreamHandler()
+formatter = logging.Formatter("%(asctime)s [%(levelname)s %(name)s]: %(message)s")
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+
+# ================== KONFIG ==================
+BASE_WSS = os.getenv("BASE_WSS_URL")  # WSS endpoint Base chain
+ADMIN_WALLET = Web3.to_checksum_address(os.getenv("BASE_ADMIN_WALLET"))
+USDC_CONTRACT = Web3.to_checksum_address(os.getenv("BASE_USDC_ADDRESS"))
+
+notifier = JualNotifier()
+
+
+class BaseUSDCMonitor:
+    def __init__(self):
+        self.supabase = supabase
+        self.wallet_admin = ADMIN_WALLET
+        self.w3 = Web3(Web3.LegacyWebSocketProvider(BASE_WSS))
+
+        if not self.w3.is_connected():
+            logger.error("❌ Gagal connect ke Base WSS")
+        else:
+            logger.info("🔗 Connected ke Base WSS")
+
+        # Kontrak token USDC (ERC20 di Base)
+        self.usdc_contract = self.w3.eth.contract(
+            address=USDC_CONTRACT,
+            abi=[
+                {
+                    "constant": True,
+                    "inputs": [{"name": "_owner", "type": "address"}],
+                    "name": "balanceOf",
+                    "outputs": [{"name": "balance", "type": "uint256"}],
+                    "payable": False,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "constant": True,
+                    "inputs": [],
+                    "name": "decimals",
+                    "outputs": [{"name": "", "type": "uint8"}],
+                    "payable": False,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "anonymous": False,
+                    "inputs": [
+                        {"indexed": True, "name": "from", "type": "address"},
+                        {"indexed": True, "name": "to", "type": "address"},
+                        {"indexed": False, "name": "value", "type": "uint256"}
+                    ],
+                    "name": "Transfer",
+                    "type": "event"
+                }
+            ]
+        )
+        self.decimals = self.usdc_contract.functions.decimals().call()
+        self.transfer_event_abi = self.usdc_contract.events.Transfer().abi
+
+    # ================== FETCH RECEIPT + BLOCK DENGAN RETRY ==================
+    async def fetch_receipt_block(self, tx_hash):
+        for attempt in range(5):  # max 5 retry
+            try:
+                receipt = self.w3.eth.get_transaction_receipt(tx_hash)
+                block = self.w3.eth.get_block(receipt['blockNumber'])
+                return receipt, block
+            except Exception as e:
+                logger.warning(f"⚠️ Retry fetch receipt/block {tx_hash} attempt {attempt+1}: {e}")
+                await asyncio.sleep(1.5)
+        logger.error(f"❌ Gagal fetch receipt/block {tx_hash} setelah 5 retry")
+        return None, None
+
+    # ================== Handle TX ==================
+    async def handle_tx(self, tx_hash: str, amount: float, sender: str, receiver: str):
+        logger.info(f"🔹 Handle USDC tx {tx_hash} | amount={amount}, sender={sender}, receiver={receiver}")
+        if not amount:
+            return
+
+        base_price_idr = await get_current_price("base")
+        logger.info(f"💲 Harga BASE real-time: {base_price_idr} IDR")
+
+        # Gunakan fetch_receipt_block agar aman dari rate limit
+        receipt, block = await self.fetch_receipt_block(tx_hash)
+        if not receipt or not block:
+            return
+
+        block_time = datetime.fromtimestamp(block['timestamp'], tz=timezone.utc)
+
+        orders = self.supabase.table("TransactionsJual").select("*").eq("status", "waiting_payment").execute().data
+        for order in orders:
+            order_time = datetime.fromisoformat(order["created_at"].replace("Z", "+00:00"))
+            if block_time < order_time:
+                continue
+
+            expected_amount = order.get("unique_amount_crypto") or order.get("amount_crypto")
+            if expected_amount is None:
+                continue
+
+            expected_amount = float(expected_amount)
+            wallet_tujuan = order["recipient_wallet"]
+
+            if wallet_tujuan.lower() == receiver.lower() and abs(amount - expected_amount) < 1e-6:
+                try:
+                    self.supabase.table("TransactionsJual").update(
+                        {
+                            "status": "paid",
+                            "signature": tx_hash,
+                            "sender_wallet": sender,
+                            "user_notified": False,
+                        }
+                    ).eq("id", order["id"]).execute()
+                    logger.info(f"✅ Order {order['id']} match → status PAID")
+                    await notifier.notify_admin(order, tx_hash)
+                    await notifier.notify_user_processing_tf(order)
+                    await disburse(order)
+                    break
+                except Exception:
+                    logger.exception(f"❌ Gagal update DB untuk order {order['id']}")
+
+    # ================== WEBSOCKET SUBSCRIBE ==================
+    async def subscribe_pending_txs(self):
+        last_block = self.w3.eth.block_number
+        logger.info(f"📌 Mulai monitor Base USDC dari block {last_block}")
+
+        from eth_utils import keccak
+        transfer_topic = Web3.to_hex(keccak(text="Transfer(address,address,uint256)"))
+
+        while True:
+            try:
+                latest_block = self.w3.eth.block_number
+
+                fromBlock = last_block + 1
+                toBlock = latest_block
+                if fromBlock > toBlock:
+                    await asyncio.sleep(3)  # throttle agar aman
+                    continue
+
+                logs = self.w3.eth.get_logs({
+                    "fromBlock": fromBlock,
+                    "toBlock": toBlock,
+                    "address": self.usdc_contract.address,
+                    "topics": [transfer_topic]
+                })
+
+                for log in logs:
+                    evt = get_event_data(self.w3.codec, self.transfer_event_abi, log)
+                    sender = evt['args']['from']
+                    receiver = evt['args']['to']
+                    value = evt['args']['value'] / (10 ** self.decimals)
+                    tx_hash = evt['transactionHash'].hex()
+
+                    # log semua tx untuk debug
+                    logger.info(f"Tx detected: {tx_hash} | from={sender} to={receiver} value={value}")
+
+                    if receiver.lower() == self.wallet_admin.lower():
+                        asyncio.create_task(self.handle_tx(tx_hash, value, sender, receiver))
+
+                last_block = latest_block
+            except Exception as e:
+                logger.error(f"❌ Error di loop block: {e}, retry dalam 5s...")
+            await asyncio.sleep(3)  # delay aman
+
+# ================== ENTRY POINT ==================
+async def run_usdc_monitor(order_id: str, chain: str = "base"):
+    monitor = BaseUSDCMonitor()
+    monitor.order_id = order_id
+    await monitor.subscribe_pending_txs()

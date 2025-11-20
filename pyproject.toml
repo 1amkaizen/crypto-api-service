@@ -1,0 +1,26 @@
+[project]
+name = "crypto-api"
+version = "0.1.0"
+description = "API crypto"
+authors = [
+    {name = "1amkaizen",email = "1amkaiz3n@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12,<4.0"
+dependencies = [
+    "fastapi (>=0.120.4,<0.121.0)",
+    "base58 (>=2.1.1,<3.0.0)",
+    "uvicorn (>=0.38.0,<0.39.0)",
+    "solders (==0.26.0)",
+    "gunicorn (>=23.0.0,<24.0.0)",
+    "solana (==0.36.9)",
+    "web3 (>=7.14.0,<8.0.0)",
+    "python-dotenv (>=1.2.1,<2.0.0)",
+    "tronpy (>=0.6.1,<0.7.0)",
+    "supabase (>=2.23.0,<3.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
