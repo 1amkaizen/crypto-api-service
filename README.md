@@ -116,8 +116,3 @@ Kalau mau, gue bisa sekalian bikin **contoh request/response JSON** untuk tiap e
 
 MIT License
 
-
-
-
-Mau gue bikinin sekalian itu?
-```
