@@ -28,7 +28,7 @@ API service untuk manajemen dan pengiriman token crypto (ETH, USDT, BNB, SOL, da
 1. Clone repo:
 
 ```bash
-git clone https://github.com/username/crypto-api-service.git
+git clone https://github.com/1amkaizen/crypto-api-service.git
 cd crypto-api-service
 ````
 
