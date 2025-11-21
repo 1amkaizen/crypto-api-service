@@ -25,7 +25,8 @@ class EthereumMonitor:
         self.supabase = supabase
         self.wallet_admin = ADMIN_WALLET
         self.tolerance = 0.0001  # toleransi ETH
-        self.w3 = Web3(Web3.WebsocketProvider(ETH_WSS))
+        self.w3 = Web3(Web3.LegacyWebSocketProvider(ETH_WSS))
+        self.processed_txs = set()
         if not self.w3.is_connected():
             logger.error("❌ Gagal connect ke Ethereum WSS")
         else:
@@ -88,7 +89,7 @@ class EthereumMonitor:
         except Exception as e:
             logger.error(f"❌ Gagal simpan transaksi: {e}")
 
-    async def subscribe_account(self):
+    async def subscribe_pending_txs(self):
         while True:
             try:
                 latest_block = await asyncio.to_thread(
@@ -100,7 +101,9 @@ class EthereumMonitor:
                         tx_hash = getattr(tx, "hash", None) or tx.get("hash")
                         if isinstance(tx_hash, bytes):
                             tx_hash = tx_hash.hex()
-                        asyncio.create_task(self.handle_tx(tx_hash))
+                        if tx_hash not in self.processed_txs:   # <--- cek dulu
+                            self.processed_txs.add(tx_hash)
+                            asyncio.create_task(self.handle_tx(tx_hash))
             except Exception as e:
                 logger.error(f"❌ Error di loop block: {e}, retry 5s")
                 await asyncio.sleep(5)
@@ -110,4 +113,4 @@ class EthereumMonitor:
 # ================== ENTRY POINT ==================
 async def run_monitor():
     monitor = EthereumMonitor()
-    await monitor.subscribe_account()
+    await monitor.subscribe_pending_txs()

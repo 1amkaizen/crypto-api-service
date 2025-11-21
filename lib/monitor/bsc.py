@@ -5,11 +5,8 @@ import logging
 from datetime import datetime, timezone
 from web3 import Web3
 from web3.middleware.proof_of_authority import ExtraDataToPOAMiddleware
-from ecerbot.database import supabase
-from ecerbot.lib.flip_disburse import disburse
-#from ecerbot.lib.midtrans_disburse import disburse
-from ecerbot.notifications.jual import JualNotifier
-from ecerbot.lib.coingecko import get_current_price
+from lib.supabase_client import supabase
+from lib.coingecko import get_current_price
 
 # ================== LOGGING ==================
 logger = logging.getLogger("monitor.bsc")
@@ -22,8 +19,6 @@ logger.addHandler(ch)
 # ================== KONFIG ==================
 BSC_WSS = os.getenv("BSC_WSS_URL")
 ADMIN_WALLET = Web3.to_checksum_address(os.getenv("BSC_ADMIN_WALLET"))
-
-notifier = JualNotifier()
 
 
 class BSCMonitor:
@@ -69,6 +64,7 @@ class BSCMonitor:
             logger.error(f"❌ get_receipt/block gagal: {e}")
             return
 
+        # Loop orders tapi HANYA UPDATE DB, tanpa notif & disburse
         orders = self.supabase.table("TransactionsJual").select("*").eq("status", "waiting_payment").execute().data
         for order in orders:
             order_time = datetime.fromisoformat(order["created_at"].replace("Z", "+00:00"))
@@ -94,14 +90,10 @@ class BSCMonitor:
                         }
                     ).eq("id", order["id"]).execute()
                     logger.info(f"✅ Order {order['id']} match → status PAID")
-                    await notifier.notify_admin(order, tx_hash)
-                    await notifier.notify_user_processing_tf(order)
-                    await disburse(order)
                     break
                 except Exception:
                     logger.exception(f"❌ Gagal update DB untuk order {order['id']}")
 
-  
     # ================== WEBSOCKET SUBSCRIBE ==================
     async def subscribe_pending_txs(self):
         last_block = self.w3.eth.block_number

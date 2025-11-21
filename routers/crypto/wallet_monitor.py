@@ -4,40 +4,21 @@ import logging
 from fastapi import APIRouter, HTTPException
 from lib.monitor.solana import SolanaMonitor
 from lib.monitor.eth import EthereumMonitor
+from lib.monitor.bsc import BSCMonitor
 
 logger = logging.getLogger(__name__)
 monitor_router = APIRouter()
 
 active_listeners = {}  # key: "{chain}_{wallet}", value: task
 
-# 🔹 Mapping nama chain / alias
-# 🔹 Mapping chain / alias
 CHAIN_MAP = {
-    # Solana
     "sol": "solana",
     "solana": "solana",
-    # Ethereum
     "eth": "ethereum",
     "ethereum": "ethereum",
-    # Binance Smart Chain
     "bsc": "binance",
     "binance": "binance",
     "bnb": "binance",
-    # Tron
-    "trx": "tron",
-    "tron": "tron",
-    # Polygon / Matic
-    "matic": "polygon",
-    "polygon": "polygon",
-    # USDT / USDC (stablecoins bisa map ke chain default)
-    "usdt": "ethereum",
-    "usdc": "ethereum",
-    # Avalanche
-    "avax": "avalanche",
-    "avalanche": "avalanche",
-    # Ton
-    "ton": "ton",
-    # Tambahan lain bisa langsung ditambah disini
 }
 
 
@@ -45,8 +26,8 @@ CHAIN_MAP = {
 async def subscribe_wallet(chain: str = "solana", wallet: str = None):
     """
     🔹 Subscribe wallet untuk listen transaksi
-    chain: bisa pakai alias seperti 'sol', 'solana', 'eth', 'ethereum'
-    wallet: wallet admin yang mau didengar
+    chain: 'sol', 'eth', 'bsc', dll
+    wallet: wallet yang mau didengar
     """
     if not wallet:
         raise HTTPException(status_code=400, detail="Wallet harus diisi")
@@ -59,12 +40,17 @@ async def subscribe_wallet(chain: str = "solana", wallet: str = None):
     if key in active_listeners:
         raise HTTPException(status_code=400, detail="Listener sudah aktif")
 
+    # assign wallet yang mau didengar ke monitor
     if resolved_chain == "solana":
         monitor = SolanaMonitor()
         monitor.wallet_admin = wallet
         task = asyncio.create_task(monitor.subscribe_account())
     elif resolved_chain == "ethereum":
         monitor = EthereumMonitor()
+        monitor.wallet_admin = wallet
+        task = asyncio.create_task(monitor.subscribe_pending_txs())
+    elif resolved_chain == "binance":
+        monitor = BSCMonitor()
         monitor.wallet_admin = wallet
         task = asyncio.create_task(monitor.subscribe_pending_txs())
     else:
