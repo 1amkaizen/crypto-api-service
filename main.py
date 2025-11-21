@@ -10,7 +10,7 @@ from routers.crypto.tokens import tokens_router
 from routers.crypto.swap import swap_router
 from routers.crypto.token_info import token_info_router
 from routers.crypto.tx_status import tx_status_router
-from routers.crypto.webhook import webhook_router
+from routers.crypto.wallet_monitor import monitor_router
 
 
 
@@ -32,7 +32,7 @@ routers = [
     swap_router,
     token_info_router,
     tx_status_router,
-    webhook_router,
+    monitor_router,
 ]
 
 for r in routers:

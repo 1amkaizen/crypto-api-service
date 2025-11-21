@@ -1,4 +1,4 @@
-# 📍 routers/crypto/webhook.py
+# 📍 routers/crypto/wallet_monitor.py
 import asyncio
 import logging
 from fastapi import APIRouter, HTTPException
@@ -6,7 +6,7 @@ from lib.monitor.solana import SolanaMonitor
 from lib.monitor.eth import EthereumMonitor
 
 logger = logging.getLogger(__name__)
-webhook_router = APIRouter()
+monitor_router = APIRouter()
 
 active_listeners = {}  # key: "{chain}_{wallet}", value: task
 
@@ -41,7 +41,7 @@ CHAIN_MAP = {
 }
 
 
-@webhook_router.post("/subscribe")
+@monitor_router.post("/subscribe")
 async def subscribe_wallet(chain: str = "solana", wallet: str = None):
     """
     🔹 Subscribe wallet untuk listen transaksi
@@ -78,7 +78,7 @@ async def subscribe_wallet(chain: str = "solana", wallet: str = None):
     }
 
 
-@webhook_router.post("/unsubscribe")
+@monitor_router.post("/unsubscribe")
 async def unsubscribe_wallet(chain: str = "solana", wallet: str = None):
     """
     🔹 Stop listener
