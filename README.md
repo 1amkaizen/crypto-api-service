@@ -83,7 +83,8 @@ Kalau mau, gue bisa sekalian bikin **contoh request/response JSON** untuk tiap e
 
 ```
 .
-├─ main.pyname
+├─ crypto-api-service
+├─ main.py
 ├─ routers/
 │  └─ crypto/
 │     ├─ ping.py
