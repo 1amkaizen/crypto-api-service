@@ -12,7 +12,15 @@ from routers.crypto.token_info import token_info_router
 from routers.crypto.tx_status import tx_status_router
 from routers.crypto.wallet_monitor import monitor_router
 
+# Router users (auth)
+from routers.users.auth import router as auth_router
+from routers.users.landing import router as landing_router
+from routers.users.dashboard import router as dashboard_router
 
+
+from lib.middleware import api_key
+from lib.middleware.api_usage import APIUsageMiddleware
+from lib.middleware.api_limit import api_rate_limit_middleware
 
 app = FastAPI(
     title="Crypto API Service",
@@ -37,3 +45,14 @@ routers = [
 
 for r in routers:
     app.include_router(r, prefix="/api/v1/crypto", tags=["Crypto"])
+
+
+# ====================== REGISTER AUTH ROUTER ======================
+app.include_router(auth_router, tags=["Auth"])
+app.include_router(landing_router, tags=["Landing"])
+app.include_router(dashboard_router, tags=["Dashboard"])
+
+# --- REGISTER MIDDLEWARE ---
+app.include_router(api_key.router)
+app.add_middleware(APIUsageMiddleware)
+app.middleware("http")(api_rate_limit_middleware)

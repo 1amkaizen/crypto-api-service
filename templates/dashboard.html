@@ -1,0 +1,237 @@
+<!-- templates/dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Dashboard - CryptoAPI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 text-gray-800">
+    <nav class="bg-white shadow p-4 flex justify-between">
+      <div class="font-bold text-lg">CryptoAPI Dashboard</div>
+      <div>
+        <a href="/logout" class="text-red-500 font-medium">Logout</a>
+      </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto mt-10">
+      <!-- USER CARD -->
+      <div class="bg-white shadow rounded-lg p-6 mb-8">
+        <h2 class="text-xl font-bold mb-3">👤 Profil Kamu</h2>
+
+        <p><b>Email:</b> {{ user.email }}</p>
+        <p>
+          <b>Dibuat:</b>
+          <span class="dt" data-dt="{{ user.created_at }}"></span>
+        </p>
+
+        <p>
+          <b>Status:</b>
+          {% if user.is_active %}
+          <span class="text-green-600 font-semibold">Aktif</span>
+          {% else %}
+          <span class="text-red-600 font-semibold">Tidak aktif</span>
+          {% endif %}
+        </p>
+      </div>
+
+      <!-- API KEYS -->
+      <div class="bg-white shadow rounded-lg p-6 mb-8">
+        <h2 class="text-xl font-bold mb-3">🔑 API Keys</h2>
+
+        <div id="api-keys-container">
+          {% if api_keys %}
+          <table class="min-w-full border">
+            <thead>
+              <tr class="bg-gray-200 text-left">
+                <th class="p-2 border">API Key</th>
+                <th class="p-2 border">Dibuat</th>
+                <th class="p-2 border">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="api-keys-table">
+              {% for key in api_keys %}
+              <tr class="border-b">
+                <td class="p-2 border font-mono">{{ key.api_key }}</td>
+                <td class="p-2 border">
+                  <span class="dt" data-dt="{{ key.created_at }}"></span>
+                </td>
+
+                <td class="p-2 border flex gap-2">
+                  <!-- Copy BTN -->
+                  <button
+                    class="copy-btn bg-gray-700 text-white px-2 py-1 rounded"
+                    data-key="{{ key.api_key }}"
+                  >
+                    Copy
+                  </button>
+
+                  <!-- Delete BTN -->
+                  <button
+                    class="delete-btn bg-red-600 text-white px-2 py-1 rounded"
+                    data-id="{{ key.id }}"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <p class="text-gray-500">Belum ada API key.</p>
+          {% endif %}
+        </div>
+
+        <button
+          id="gen-key-btn"
+          class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          + Generate API Key
+        </button>
+      </div>
+
+      <!-- API USAGE -->
+      <div class="bg-white shadow rounded-lg p-6 mb-8">
+        <h2 class="text-xl font-bold mb-3">📊 API Usage</h2>
+
+        {% if usage_stats %}
+        <table class="min-w-full border">
+          <thead>
+            <tr class="bg-gray-200 text-left">
+              <th class="p-2 border">Endpoint</th>
+              <th class="p-2 border">Count</th>
+              <th class="p-2 border">Last Used</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for usage in usage_stats %}
+            <tr class="border-b">
+              <td class="p-2 border">{{ usage.endpoint }}</td>
+              <td class="p-2 border">{{ usage.count }}</td>
+              <td class="p-2 border">
+                <span class="dt" data-dt="{{ usage.last_used }}"></span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p class="text-gray-500">Belum ada penggunaan API.</p>
+        {% endif %}
+      </div>
+
+      <!-- API LIMIT -->
+      <div class="bg-white shadow-lg rounded-xl p-6 mb-8">
+        <h2 class="text-2xl font-bold mb-4 text-yellow-600">⚠️ API Limit</h2>
+      
+        <!-- Progress bar -->
+        <div class="mb-4">
+          <div class="flex justify-between mb-1">
+            <span class="text-gray-700 font-medium">Dipakai saat ini:</span>
+            <span class="text-gray-700 font-mono">{{ rate_limit.used }}/{{ rate_limit.max_request }}</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-4">
+            <div
+              class="bg-yellow-500 h-4 rounded-full transition-all duration-300"
+              style="width: {{ (rate_limit.used / rate_limit.max_request) * 100 }}%">
+            </div>
+          </div>
+        </div>
+      
+        <ul class="text-gray-700 space-y-1 mb-4">
+          <li><b>Rate Limit:</b> {{ rate_limit.max_request }} request / {{ rate_limit.window_seconds }} detik</li>
+          <li><b>Sisa:</b> {{ rate_limit.remaining }} request</li>
+          <li><b>IP Kamu:</b> {{ client_ip }}</li>
+        </ul>
+      
+        <p class="text-sm text-gray-500">
+          Sistem rate-limit bekerja otomatis. Jika melebihi batas, API akan mengembalikan
+          <span class="font-mono bg-red-100 text-red-700 px-2 py-0.5 rounded">429 - Rate limit exceeded</span>.
+        </p>
+      </div>
+      
+      
+
+    </div>
+
+    <script>
+      // Format ISO → readable format
+      function formatDate(iso) {
+        if (!iso) return "-";
+
+        const dt = new Date(iso);
+        if (isNaN(dt)) return iso;
+
+        const opt = {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        };
+        return dt.toLocaleString("id-ID", opt);
+      }
+
+      // Apply format to all .dt elements
+      document.querySelectorAll(".dt").forEach((el) => {
+        el.innerText = formatDate(el.dataset.dt);
+      });
+
+      // Generate API Key
+      document.getElementById("gen-key-btn").onclick = async () => {
+        const res = await fetch("/generate-api-key", {
+          method: "POST",
+          credentials: "include",
+        });
+        const data = await res.json();
+
+        if (data.api_key) {
+          const table = document.getElementById("api-keys-table");
+
+          const row = document.createElement("tr");
+          row.classList.add("border-b");
+          row.innerHTML = `
+                    <td class="p-2 border font-mono">${data.api_key}</td>
+                    <td class="p-2 border">Baru saja</td>
+                    <td class="p-2 border">
+                        <button class="copy-btn bg-gray-700 text-white px-2 py-1 rounded"
+                            data-key="${data.api_key}">
+                            Copy
+                        </button>
+                    </td>
+                `;
+          table.prepend(row);
+        }
+      };
+
+      // Copy button
+      document.addEventListener("click", (e) => {
+        const btn = e.target.closest(".copy-btn");
+        if (btn) {
+          navigator.clipboard.writeText(btn.dataset.key);
+          btn.innerText = "Copied!";
+          setTimeout(() => (btn.innerText = "Copy"), 1200);
+        }
+      });
+      document.addEventListener("click", async (e) => {
+        const del = e.target.closest(".delete-btn");
+        if (del) {
+          const id = del.dataset.id;
+
+          if (!confirm("Yakin hapus API key ini?")) return;
+
+          const res = await fetch(`/delete-api-key/${id}`, {
+            method: "DELETE",
+            credentials: "include",
+          });
+
+          const data = await res.json();
+          if (data.success) {
+            del.closest("tr").remove();
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

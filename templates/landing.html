@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Crypto API Service{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto mt-12 space-y-12">
+
+    <!-- Hero Section -->
+    <div class="bg-white shadow-lg rounded-lg p-10 text-center">
+        <h1 class="text-4xl font-extrabold text-blue-600 mb-6">Crypto API Service</h1>
+        <p class="text-gray-700 text-lg mb-6">
+            Automasi transaksi crypto jadi mudah dan cepat. Kirim, monitor, dan swap token seperti 
+            <span class="font-semibold">ETH, USDT, BNB, SOL</span> dan banyak lagi hanya dengan <span class="font-semibold">API sederhana</span>.
+        </p>
+
+        <div class="flex justify-center space-x-4">
+            <a href="/register" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold">
+                Daftar Sekarang
+            </a>
+            <a href="/login" class="bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors font-semibold">
+                Login
+            </a>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="grid md:grid-cols-3 gap-6">
+        <div class="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <h3 class="font-bold text-blue-600 mb-2">Kirim Token</h3>
+            <p class="text-gray-600 text-sm">Transfer crypto ke alamat manapun secara otomatis, aman, dan cepat.</p>
+        </div>
+        <div class="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <h3 class="font-bold text-blue-600 mb-2">Pantau Saldo & Transaksi</h3>
+            <p class="text-gray-600 text-sm">Cek saldo wallet dan riwayat transaksi secara real-time melalui API.</p>
+        </div>
+        <div class="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <h3 class="font-bold text-blue-600 mb-2">Swap & Harga Token</h3>
+            <p class="text-gray-600 text-sm">Dapatkan harga terbaru token & lakukan swap langsung dari API Anda.</p>
+        </div>
+    </div>
+
+    <!-- Pricing Section -->
+    <div class="text-center">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6">Pilih Paket API Anda</h2>
+        <div class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+
+            <!-- Basic Plan -->
+            <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow border border-gray-200">
+                <h3 class="text-xl font-bold text-blue-600 mb-2">Basic</h3>
+                <p class="text-gray-600 mb-4">Cocok untuk percobaan dan projek kecil</p>
+                <p class="text-3xl font-extrabold mb-4">Rp50.000<span class="text-base font-medium">/bulan</span></p>
+                <ul class="text-gray-600 mb-6 space-y-1">
+                    <li>1000 Request / bulan</li>
+                    <li>Akses ke semua token dasar</li>
+                    <li>Support via Email</li>
+                </ul>
+                <a href="/register" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-semibold transition-colors block">Pilih Paket</a>
+            </div>
+
+            <!-- Pro Plan -->
+            <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow border border-gray-200">
+                <h3 class="text-xl font-bold text-blue-600 mb-2">Pro</h3>
+                <p class="text-gray-600 mb-4">Untuk integrasi aplikasi dan bot profesional</p>
+                <p class="text-3xl font-extrabold mb-4">Rp150.000<span class="text-base font-medium">/bulan</span></p>
+                <ul class="text-gray-600 mb-6 space-y-1">
+                    <li>10.000 Request / bulan</li>
+                    <li>Akses ke semua token & chain</li>
+                    <li>Prioritas Support</li>
+                </ul>
+                <a href="/register" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-semibold transition-colors block">Pilih Paket</a>
+            </div>
+
+            <!-- Enterprise Plan -->
+            <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow border border-gray-200">
+                <h3 class="text-xl font-bold text-blue-600 mb-2">Enterprise</h3>
+                <p class="text-gray-600 mb-4">Solusi untuk perusahaan atau bot besar</p>
+                <p class="text-3xl font-extrabold mb-4">Hubungi Kami</p>
+                <ul class="text-gray-600 mb-6 space-y-1">
+                    <li>Request Unlimited</li>
+                    <li>Akses penuh semua token & chain</li>
+                    <li>Dedicated Support & SLA</li>
+                </ul>
+                <a href="/contact" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-semibold transition-colors block">Hubungi Kami</a>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
