@@ -24,9 +24,23 @@ async def register_page(request: Request):
 
 @router.post("/register", response_class=HTMLResponse)
 async def register_user(
-    request: Request, email: str = Form(...), password: str = Form(...)
+    request: Request,
+    name: str = Form(...),
+    username: str = Form(...),
+    phone: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    confirm_password: str = Form(...),
 ):
     logger.info(f"[REGISTER] Cek email: {email}")
+
+    # Validasi password konfirmasi
+    if password != confirm_password:
+        logger.warning("[REGISTER] Password dan konfirmasi tidak sama")
+        return templates.TemplateResponse(
+            "register.html",
+            {"request": request, "error": "Password dan konfirmasi tidak sama"},
+        )
 
     try:
         # Cek email di Supabase
@@ -53,7 +67,16 @@ async def register_user(
     try:
         await asyncio.to_thread(
             lambda: supabase.table("Users")
-            .insert({"email": email, "password_hash": hashed, "is_active": True})
+            .insert(
+                {
+                    "name": name,
+                    "username": username,
+                    "phone": phone,
+                    "email": email,
+                    "password_hash": hashed,
+                    "is_active": True,
+                }
+            )
             .execute()
         )
         logger.info(f"[REGISTER] User berhasil dibuat: {email}")

@@ -1,0 +1,49 @@
+<!-- templates/dashboard/base_dashboard.html -->
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}CryptoAPI{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background-color: rgba(100, 116, 139, 0.6);
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen font-sans">
+
+    <!-- Navbar -->
+    <header class="bg-white shadow-md py-4 px-6 flex justify-between items-center sticky top-0 z-50">
+      <div class="flex items-center space-x-3">
+        <div class="text-2xl font-bold text-indigo-600">CryptoAPI</div>
+        <span class="text-gray-500">Dashboard</span>
+      </div>
+      <div class="flex items-center space-x-4">
+        <a href="/logout" class="px-3 py-1 rounded-md bg-red-100 text-red-600 font-semibold hover:bg-red-200 transition">Logout</a>
+      </div>
+    </header>
+
+    <!-- Layout Wrapper -->
+    <div class="flex flex-1 w-full h-[calc(100vh-64px)] overflow-hidden">
+
+      <!-- Sidebar -->
+      <aside class="w-64 bg-white shadow-md p-6 flex-shrink-0 overflow-y-auto">
+        {% include 'dashboard/partials/sidebar.html' %}
+      </aside>
+
+      <!-- Main content -->
+      <main class="flex-1 bg-gray-50 overflow-y-auto p-6">
+        {% block content %}{% endblock %}
+      </main>
+
+    </div>
+
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

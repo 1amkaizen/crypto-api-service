@@ -1,0 +1,36 @@
+<!-- USER CARD PROFILE -->
+<div class="bg-white shadow-lg rounded-xl p-6 mb-8 border border-gray-200">
+  <h2 class="text-2xl font-bold mb-4 text-blue-600">👤 Profil Kamu</h2>
+  
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
+    <div>
+      <p><b>Nama:</b> {{ user.name or '-' }}</p>
+      <p><b>Username:</b> {{ user.username or '-' }}</p>
+      <p><b>Email:</b> {{ user.email }}</p>
+    </div>
+    <div>
+      <p><b>Nomor Telepon:</b> {{ user.phone or '-' }}</p>
+      <p><b>Status:</b>
+        {% if user.is_active %}
+        <span class="text-green-600 font-semibold">Aktif</span>
+        {% else %}
+        <span class="text-red-600 font-semibold">Tidak aktif</span>
+        {% endif %}
+      </p>
+      <p><b>Dibuat:</b> <span class="dt" data-dt="{{ user.created_at }}"></span></p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Format datetime Supabase ke lokal user
+  document.querySelectorAll('.dt').forEach(el => {
+    const dtStr = el.dataset.dt;
+    if(dtStr){
+      const dt = new Date(dtStr);
+      el.textContent = dt.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+    } else {
+      el.textContent = '-';
+    }
+  });
+</script>

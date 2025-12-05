@@ -1,0 +1,26 @@
+<!-- API USAGE -->
+<div class="bg-white shadow rounded-lg p-6 mb-8">
+    <h2 class="text-xl font-bold mb-3">📊 API Usage</h2>
+    {% if usage_stats %}
+    <table class="min-w-full border">
+      <thead>
+        <tr class="bg-gray-200 text-left">
+          <th class="p-2 border">Endpoint</th>
+          <th class="p-2 border">Count</th>
+          <th class="p-2 border">Last Used</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for usage in usage_stats %}
+        <tr class="border-b">
+          <td class="p-2 border">{{ usage.endpoint }}</td>
+          <td class="p-2 border">{{ usage.count }}</td>
+          <td class="p-2 border"><span class="dt" data-dt="{{ usage.last_used }}"></span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="text-gray-500">Belum ada penggunaan API.</p>
+    {% endif %}
+  </div>

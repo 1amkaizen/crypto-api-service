@@ -1,0 +1,100 @@
+<h1 class="text-2xl font-bold mb-6">Selamat Datang di Dashboard</h1>
+
+<!-- Statistik Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+  <!-- Total API Keys -->
+  <div class="bg-white shadow rounded-lg p-6 flex flex-col justify-between">
+    <div>
+      <p class="text-gray-500">Total API Keys</p>
+      <p class="text-3xl font-bold text-indigo-600">{{ api_keys|length }}</p>
+    </div>
+    <div class="text-gray-400 text-sm mt-2">
+      Update terakhir: 
+      {% if api_keys %}
+        {% set last_key = api_keys | max(attribute='created_at') %}
+        {{ last_key.created_at[:16] | replace("T", " ") }}
+      {% else %}
+        -
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Total API Usage -->
+  <div class="bg-white shadow rounded-lg p-6 flex flex-col justify-between">
+    <div>
+      <p class="text-gray-500">Total API Requests</p>
+      <p class="text-3xl font-bold text-green-600">{{ rate_limit.used }}</p>
+    </div>
+    <div class="text-gray-400 text-sm mt-2">
+      Update terakhir: {{ rate_limit.window_seconds }} detik terakhir
+    </div>
+  </div>
+
+  <!-- API Limit -->
+  <div class="bg-white shadow rounded-lg p-6 flex flex-col justify-between">
+    <div>
+      <p class="text-gray-500">API Limit Tersisa</p>
+      <p class="text-3xl font-bold text-red-600">{{ rate_limit.remaining }}</p>
+    </div>
+    <div class="text-gray-400 text-sm mt-2">
+      Reset: {{ rate_limit.max_request }} requests / {{ rate_limit.window_seconds }} detik
+    </div>
+  </div>
+
+</div>
+
+<!-- Chart / Grafik -->
+<div class="mt-8 bg-white shadow rounded-lg p-6">
+  <h2 class="text-xl font-bold mb-4">Grafik Penggunaan API</h2>
+  <canvas id="apiUsageChart" class="w-full h-64"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('apiUsageChart')?.getContext('2d');
+
+  // Pastikan usage_stats ada
+  const usageStats = {{ usage_stats|default([])|tojson }};
+
+  const labels = usageStats.map(u => u.endpoint);
+  const counts = usageStats.map(u => u.count);
+  const totalRequests = counts.reduce((a, b) => a + b, 0);
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Requests per Endpoint',
+        data: counts,
+        backgroundColor: labels.map(() => 'rgba(99, 102, 241, 0.6)'),
+        borderColor: labels.map(() => 'rgba(99, 102, 241, 1)'),
+        borderWidth: 1,
+        borderRadius: 4,  // Biar rounded bars
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }, // legend di hide biar gak panjang
+        tooltip: {
+          callbacks: {
+            title: function(context) { return context[0].label },
+            label: function(context) { return `${context.raw} requests` }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 14 } }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { stepSize: 1, font: { size: 14 } }
+        }
+      }
+    }
+  });
+</script>

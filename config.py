@@ -35,7 +35,6 @@ def to_checksum(address: str):
 
 # ===== Telegram =====
 BOT_TOKEN = get_env("BOT_TOKEN")
-WEBHOOK_URL = get_env("WEBHOOK_URL")
 ADMIN_ID = [int(x.strip()) for x in get_env("ADMIN_ID", "").split(",") if x.strip().isdigit()]
 ADMIN_USERNAME = get_env("ADMIN_USERNAME")
 BOT_USERNAME = get_env("BOT_USERNAME")

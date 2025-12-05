@@ -4,24 +4,61 @@
 {% block title %}Register{% endblock %}
 
 {% block content %}
-<div class="max-w-md mx-auto bg-white shadow-lg rounded-lg p-8 mt-10">
+<div class="max-w-md mx-auto bg-white shadow-lg rounded-lg p-8 mt-10 animate-fadeIn">
     <h2 class="text-2xl font-bold text-center mb-6 text-blue-600">Buat Akun Baru</h2>
 
     {% if error %}
-    <p class="text-red-500 text-center mb-4">{{ error }}</p>
+    <p id="server-error" class="text-red-500 text-center mb-4 animate-pulse">{{ error }}</p>
     {% endif %}
 
-    <form method="post" class="space-y-4">
+    <form method="post" class="space-y-4" id="registerForm">
+        <!-- Nama -->
+        <div>
+            <label class="block text-gray-700 mb-1" for="name">Nama Lengkap</label>
+            <input type="text" name="name" id="name" placeholder="Masukkan nama lengkap" required
+                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"/>
+        </div>
+
+        <!-- Username -->
+        <div>
+            <label class="block text-gray-700 mb-1" for="username">Username</label>
+            <input type="text" name="username" id="username" placeholder="Masukkan username" required
+                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"/>
+        </div>
+
+        <!-- Nomor Telepon -->
+        <div>
+            <label class="block text-gray-700 mb-1" for="phone">Nomor Telepon</label>
+            <input type="tel" name="phone" id="phone" placeholder="081234567890" required
+                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"/>
+            <p id="phone-error" class="text-red-500 text-sm mt-1 hidden">Nomor telepon tidak valid</p>
+        </div>
+
+        <!-- Email -->
         <div>
             <label class="block text-gray-700 mb-1" for="email">Email</label>
             <input type="email" name="email" id="email" placeholder="Masukkan email" required
-                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"/>
+                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"/>
+                <p id="email-error" class="text-red-500 text-sm mt-1 hidden">Email harus mengandung "@" dan format valid</p>
+
         </div>
 
-        <div>
+        <!-- Password -->
+        <div class="relative">
             <label class="block text-gray-700 mb-1" for="password">Password</label>
-            <input type="password" name="password" id="password" placeholder="Masukkan password" required
-                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"/>
+            <input type="password" name="password" id="password" placeholder="Masukkan password" required minlength="6"
+                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"/>
+            <span id="togglePassword" class="absolute right-3 top-9 cursor-pointer text-gray-500 select-none">👁️</span>
+            <p id="password-feedback" class="text-sm mt-1 hidden"></p>
+        </div>
+
+        <!-- Konfirmasi Password -->
+        <div class="relative">
+            <label class="block text-gray-700 mb-1" for="confirm_password">Konfirmasi Password</label>
+            <input type="password" name="confirm_password" id="confirm_password" placeholder="Ulangi password" required minlength="6"
+                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"/>
+            <span id="toggleConfirm" class="absolute right-3 top-9 cursor-pointer text-gray-500 select-none">👁️</span>
+            <p id="pass-error" class="text-sm mt-1 hidden"></p>
         </div>
 
         <button type="submit"
@@ -34,4 +71,101 @@
         Sudah punya akun? <a href="/login" class="text-blue-600 hover:underline">Login</a>
     </p>
 </div>
+
+<script>
+const password = document.getElementById("password");
+const confirm = document.getElementById("confirm_password");
+const passError = document.getElementById("pass-error");
+const passwordFeedback = document.getElementById("password-feedback");
+const phone = document.getElementById("phone");
+const phoneError = document.getElementById("phone-error");
+const email = document.getElementById("email");
+const emailError = document.getElementById("email-error");
+const form = document.getElementById("registerForm");
+
+// Toggle password visibility
+document.getElementById("togglePassword").addEventListener("click", () => {
+    password.type = password.type === "password" ? "text" : "password";
+});
+document.getElementById("toggleConfirm").addEventListener("click", () => {
+    confirm.type = confirm.type === "password" ? "text" : "password";
+});
+
+// Validasi nomor telepon
+phone.addEventListener("input", () => {
+    const phoneRegex = /^[0-9]{10,15}$/;
+    if(!phoneRegex.test(phone.value)){
+        phoneError.classList.remove("hidden");
+        phone.classList.add("border-red-500");
+    } else {
+        phoneError.classList.add("hidden");
+        phone.classList.remove("border-red-500");
+        phone.classList.add("border-green-500");
+    }
+});
+
+// Validasi email
+email.addEventListener("input", () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if(!emailRegex.test(email.value)){
+        emailError.classList.remove("hidden");
+        email.classList.add("border-red-500");
+    } else {
+        emailError.classList.add("hidden");
+        email.classList.remove("border-red-500");
+        email.classList.add("border-green-500");
+    }
+});
+
+// Validasi password live
+const validatePassword = () => {
+    if(confirm.value === ""){
+        passError.classList.add("hidden");
+        confirm.classList.remove("border-red-500", "border-green-500");
+        return;
+    }
+    if(password.value !== confirm.value){
+        passError.textContent = "Password tidak sama";
+        passError.classList.remove("hidden");
+        passError.classList.remove("text-green-500");
+        passError.classList.add("text-red-500");
+        confirm.classList.add("border-red-500");
+        confirm.classList.remove("border-green-500");
+    } else {
+        passError.textContent = "Password cocok";
+        passError.classList.remove("hidden");
+        passError.classList.remove("text-red-500");
+        passError.classList.add("text-green-500");
+        confirm.classList.add("border-green-500");
+        confirm.classList.remove("border-red-500");
+    }
+};
+
+password.addEventListener("input", validatePassword);
+confirm.addEventListener("input", validatePassword);
+
+// Validasi submit
+form.addEventListener("submit", (e) => {
+    if(password.value !== confirm.value){
+        e.preventDefault();
+        passError.textContent = "Password tidak sama";
+        passError.classList.remove("hidden");
+        passError.classList.remove("text-green-500");
+        passError.classList.add("text-red-500");
+        confirm.classList.add("border-red-500");
+    }
+});
+</script>
+
+<style>
+@keyframes shake {
+  0%,100%{transform:translateX(0);}
+  25%{transform:translateX(-5px);}
+  50%{transform:translateX(5px);}
+  75%{transform:translateX(-5px);}
+}
+.animate-shake{animation:shake 0.5s;}
+@keyframes fadeIn{from{opacity:0;} to{opacity:1;}}
+.animate-fadeIn{animation:fadeIn 0.5s ease-in;}
+</style>
 {% endblock %}

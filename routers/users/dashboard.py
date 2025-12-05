@@ -118,10 +118,18 @@ async def dashboard_page(request: Request):
     usage_stats = [{"endpoint": k, **v} for k, v in usage_dict.items()]
 
     return templates.TemplateResponse(
-        "dashboard.html",
+        "dashboard/dashboard.html",
         {
             "request": request,
-            "user": user,
+            "user": {
+                "id": user["id"],
+                "name": user.get("name"),
+                "username": user.get("username"),
+                "email": user.get("email"),
+                "phone": user.get("phone"),
+                "is_active": user.get("is_active"),
+                "created_at": user.get("created_at"),
+            },
             "api_keys": api_keys,
             "usage_stats": usage_stats,
             "rate_limit": rate_limit_info,

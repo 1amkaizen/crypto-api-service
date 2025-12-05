@@ -1,0 +1,22 @@
+<!-- API LIMIT -->
+<div class="bg-white shadow-lg rounded-xl p-6 mb-8">
+    <h2 class="text-2xl font-bold mb-4 text-yellow-600">⚠️ API Limit</h2>
+    <div class="mb-4">
+      <div class="flex justify-between mb-1">
+        <span class="text-gray-700 font-medium">Dipakai saat ini:</span>
+        <span class="text-gray-700 font-mono">{{ rate_limit.used }}/{{ rate_limit.max_request }}</span>
+      </div>
+      <div class="w-full bg-gray-200 rounded-full h-4">
+        <div class="bg-yellow-500 h-4 rounded-full transition-all duration-300" style="width: {{ (rate_limit.used / rate_limit.max_request) * 100 }}%"></div>
+      </div>
+    </div>
+    <ul class="text-gray-700 space-y-1 mb-4">
+      <li><b>Rate Limit:</b> {{ rate_limit.max_request }} request / {{ rate_limit.window_seconds }} detik</li>
+      <li><b>Sisa:</b> {{ rate_limit.remaining }} request</li>
+      <li><b>IP Kamu:</b> {{ client_ip }}</li>
+    </ul>
+    <p class="text-sm text-gray-500">
+      Sistem rate-limit bekerja otomatis. Jika melebihi batas, API akan mengembalikan
+      <span class="font-mono bg-red-100 text-red-700 px-2 py-0.5 rounded">429 - Rate limit exceeded</span>.
+    </p>
+  </div>

@@ -1,0 +1,105 @@
+<!-- templates/dashboard/dashboard.html -->
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block title %}Dashboard - CryptoAPI{% endblock %}
+
+{% block content %}
+<!-- Tab: Dashboard Utama -->
+<div id="dashboard" class="tab-content p-4">
+  {% include "dashboard/partials/halaman_utama.html" %}
+</div>
+
+<!-- Tab: Profile -->
+<div id="profile" class="tab-content hidden">
+  {% include "dashboard/partials/profil.html" %}
+</div>
+
+<!-- Tab: API Keys -->
+<div id="apikeys" class="tab-content hidden">
+  {% include "dashboard/partials/generate_api.html"  with context %}
+  {% include "dashboard/partials/api_usage.html"  with context %}
+  {% include "dashboard/partials/api_limit.html" with context %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+  function formatDate(iso) {
+    if (!iso) return "-";
+    const dt = new Date(iso);
+    if (isNaN(dt)) return iso;
+    const opt = { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" };
+    return dt.toLocaleString("id-ID", opt);
+  }
+
+  function updateDates() {
+    document.querySelectorAll(".dt").forEach(el => el.innerText = formatDate(el.dataset.dt));
+  }
+
+  updateDates();
+
+  function addApiKeyToTable(api_key) {
+    const table = document.getElementById("api-keys-table");
+    const row = document.createElement("tr");
+    row.classList.add("border-b");
+    row.innerHTML = `
+      <td class="p-2 border font-mono">${api_key}</td>
+      <td class="p-2 border">Baru saja</td>
+      <td class="p-2 border flex gap-2">
+        <button class="copy-btn bg-gray-700 text-white px-2 py-1 rounded" data-key="${api_key}">Copy</button>
+      </td>
+    `;
+    table.prepend(row);
+  }
+
+  document.getElementById("gen-key-btn").addEventListener("click", async () => {
+    const res = await fetch("/generate-api-key", { method: "POST", credentials: "include" });
+    const data = await res.json();
+    if (data.api_key) addApiKeyToTable(data.api_key);
+  });
+
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".copy-btn");
+    if (btn) {
+      navigator.clipboard.writeText(btn.dataset.key);
+      btn.innerText = "Copied!";
+      setTimeout(() => btn.innerText = "Copy", 1200);
+      return;
+    }
+
+    const del = e.target.closest(".delete-btn");
+    if (del) {
+      const id = del.dataset.id;
+      if (!confirm("Yakin hapus API key ini?")) return;
+      const res = await fetch(`/delete-api-key/${id}`, { method: "DELETE", credentials: "include" });
+      const data = await res.json();
+      if (data.success) del.closest("tr").remove();
+    }
+  });
+</script>
+
+<script>
+  // Tab switching logic
+  const tabs = document.querySelectorAll('.tab-btn');
+  const contents = document.querySelectorAll('.tab-content');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.tab;
+
+      // Sembunyikan semua konten tab
+      contents.forEach(c => c.classList.add('hidden'));
+      // Tampilkan tab target
+      document.getElementById(target).classList.remove('hidden');
+
+      // Update styling tab aktif
+      tabs.forEach(t => t.classList.remove('bg-indigo-100','font-semibold'));
+      tab.classList.add('bg-indigo-100','font-semibold');
+    });
+  });
+
+  // Buka tab pertama otomatis
+  tabs[0]?.click();
+</script>
+{% endblock %}

@@ -1,0 +1,32 @@
+<!-- API KEYS -->
+<div class="bg-white shadow rounded-lg p-6 mb-8">
+  <h2 class="text-xl font-bold mb-3">🔑 API Keys</h2>
+  <div id="api-keys-container">
+    {% if api_keys %}
+    <table class="min-w-full border">
+      <thead>
+        <tr class="bg-gray-200 text-left">
+          <th class="p-2 border">API Key</th>
+          <th class="p-2 border">Dibuat</th>
+          <th class="p-2 border">Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="api-keys-table">
+        {% for key in api_keys %}
+        <tr class="border-b">
+          <td class="p-2 border font-mono">{{ key.api_key }}</td>
+          <td class="p-2 border"><span class="dt" data-dt="{{ key.created_at }}"></span></td>
+          <td class="p-2 border flex gap-2">
+            <button class="copy-btn bg-gray-700 text-white px-2 py-1 rounded" data-key="{{ key.api_key }}">Copy</button>
+            <button class="delete-btn bg-red-600 text-white px-2 py-1 rounded" data-id="{{ key.id }}">Delete</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="text-gray-500">Belum ada API key.</p>
+    {% endif %}
+  </div>
+  <button id="gen-key-btn" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">+ Generate API Key</button>
+</div>
