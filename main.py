@@ -15,11 +15,6 @@ from routers.crypto.token_info import token_info_router
 from routers.crypto.tx_status import tx_status_router
 from routers.crypto.wallet_monitor import monitor_router
 
-# ====================== MIDDLEWARE ======================
-from lib.middleware import api_key
-from lib.middleware.api_usage import APIUsageMiddleware
-from lib.middleware.api_limit import api_rate_limit_middleware
-
 # ====================== APP ======================
 app = FastAPI(
     title="Crypto API Service",
@@ -44,11 +39,6 @@ crypto_routers = [
 
 for r in crypto_routers:
     app.include_router(r, prefix="/api/v1/crypto", tags=["Crypto"])
-
-# ====================== MIDDLEWARE ======================
-app.include_router(api_key.router)
-app.add_middleware(APIUsageMiddleware)
-app.middleware("http")(api_rate_limit_middleware)
 
 
 # ====================== CUSTOM OPENAPI (HANYA CRYPTO) ======================

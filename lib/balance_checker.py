@@ -1,6 +1,5 @@
 # 📍 lib/balance_checker.py
 import logging
-import os
 from web3 import Web3
 from tronpy import Tron
 from tronpy.providers import HTTPProvider
@@ -10,37 +9,30 @@ import asyncio
 
 logger = logging.getLogger(__name__)
 
-SOLANA_RPC = os.getenv("SOLANA_RPC_URL")
-ETH_RPC = os.getenv("ETH_RPC_URL")
-BSC_RPC = os.getenv("BSC_RPC_URL")
-TRON_FULL_NODE = os.getenv("TRON_FULL_NODE")
 
 # ===================== ETH / BSC / BNB =====================
-CHAIN_RPC = {
-    "eth": ETH_RPC,
-    "bsc": BSC_RPC,
-    "bnb": BSC_RPC,   # ✅ BNB mainnet pakai RPC BSC
-}
-
-def get_eth_bsc_balance(chain: str, wallet: str) -> float:
-    rpc_url = CHAIN_RPC.get(chain.lower())
+def get_eth_bsc_balance(rpc_url: str, wallet: str) -> float:
     if not rpc_url:
-        logger.error(f"❌ RPC {chain} tidak ditemukan")
+        logger.error("❌ RPC tidak diberikan")
         return 0.0
     try:
         w3 = Web3(Web3.HTTPProvider(rpc_url))
         balance_wei = w3.eth.get_balance(wallet)
         balance = Web3.from_wei(balance_wei, "ether")
-        logger.info(f"💰 {chain.upper()} balance untuk {wallet}: {balance}")
+        logger.info(f"💰 Balance untuk {wallet}: {balance}")
         return float(balance)
     except Exception as e:
-        logger.error(f"❌ Gagal cek {chain.upper()} wallet {wallet}: {e}")
+        logger.error(f"❌ Gagal cek wallet {wallet}: {e}")
         return 0.0
 
+
 # ===================== SOLANA =====================
-def get_solana_balance(wallet: str) -> float:
+def get_solana_balance(rpc_url: str, wallet: str) -> float:
+    if not rpc_url:
+        logger.error("❌ RPC tidak diberikan")
+        return 0.0
     try:
-        client = Client(SOLANA_RPC)
+        client = Client(rpc_url)
         pubkey = Pubkey.from_string(wallet)
         resp = client.get_balance(pubkey)
         lamports = resp.value
@@ -51,10 +43,13 @@ def get_solana_balance(wallet: str) -> float:
         logger.error(f"❌ Gagal cek SOL wallet {wallet}: {e}", exc_info=True)
         return 0.0
 
+
 # ===================== TRON =====================
-def get_trx_balance(wallet: str) -> float:
+def get_trx_balance(node_url: str, wallet: str) -> float:
+    if not node_url:
+        logger.error("❌ Node URL tidak diberikan")
+        return 0.0
     try:
-        node_url = TRON_FULL_NODE
         client = Tron(provider=HTTPProvider(node_url))
         balance_sun = client.get_account_balance(wallet)
         balance_trx = balance_sun / 1_000_000
@@ -64,15 +59,16 @@ def get_trx_balance(wallet: str) -> float:
         logger.error(f"❌ Gagal cek TRX wallet {wallet}: {e}")
         return 0.0
 
+
 # ===================== WRAPPER =====================
-async def check_balance(chain: str, wallet: str) -> float:
+async def check_balance(chain: str, wallet: str, rpc_url: str) -> float:
     chain = chain.lower()
     if chain in ["eth", "bsc", "bnb"]:
-        return get_eth_bsc_balance(chain, wallet)
+        return get_eth_bsc_balance(rpc_url, wallet)
     elif chain == "sol":
-        return await asyncio.to_thread(get_solana_balance, wallet)
+        return await asyncio.to_thread(get_solana_balance, rpc_url, wallet)
     elif chain == "trx":
-        return get_trx_balance(wallet)
+        return get_trx_balance(rpc_url, wallet)
     else:
         logger.error(f"❌ Chain {chain} tidak didukung")
         return 0.0

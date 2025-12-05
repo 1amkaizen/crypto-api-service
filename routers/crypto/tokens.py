@@ -8,5 +8,5 @@ logger = logging.getLogger(__name__)
 
 @tokens_router.get("/tokens")
 async def get_supported_tokens():
-    tokens = ["BASE", "SOL", "ETH", "BNB", "TRX"]  # bisa dari config
+    tokens = ["BASE", "SOL", "ETH", "BNB", "TRX"]  
     return {"status": "success", "tokens": tokens}
